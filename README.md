@@ -1,4 +1,4 @@
-# Math & Physics Sandbox
+# PhysioMath
 
 Un entorno interactivo experimental basado en la web para explorar sistemas dinámicos, geometría fractal, procesamiento de señales y autómatas celulares en tiempo real utilizando HTML5 Canvas y JavaScript nativo.
 
