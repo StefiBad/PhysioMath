@@ -198,7 +198,6 @@
 
     <div class="main-content">
 
-        <!-- 1. PÉNDULO DOBLE -->
         <div id="panel-pendulo" class="view-panel active">
             <div class="canvas-container">
                 <canvas id="canvas-pendulo"></canvas>
@@ -228,7 +227,6 @@
             </div>
         </div>
 
-        <!-- 2. CAJA DE GRAVEDAD -->
         <div id="panel-colisiones" class="view-panel">
             <div class="canvas-container">
                 <canvas id="canvas-colisiones"></canvas>
@@ -248,7 +246,6 @@
             </div>
         </div>
 
-        <!-- 3. FRACTALES -->
         <div id="panel-fractales" class="view-panel">
             <div class="canvas-container">
                 <canvas id="canvas-fractales"></canvas>
@@ -264,7 +261,6 @@
             </div>
         </div>
 
-        <!-- 4. TRIGONOMETRÍA / FOURIER -->
         <div id="panel-trigo" class="view-panel">
             <div class="canvas-container">
                 <canvas id="canvas-trigo"></canvas>
@@ -283,7 +279,6 @@
             </div>
         </div>
 
-        <!-- 5. JUEGO DE LA VIDA -->
         <div id="panel-vida" class="view-panel">
             <div class="canvas-container">
                 <canvas id="canvas-vida"></canvas>
@@ -563,19 +558,17 @@
             animationFrameIds['colisiones'] = requestAnimationFrame(loopColisiones);
         }
 
-        // --- 3. FRACTAL DE JULIA CON RESET DE DESLIZADOR COMPLETADO ---
+        // --- 3. FRACTAL DE JULIA (SOLO RESETEA COORDENADAS Y ZOOM) ---
         const ctxFrac = canvases.fractales.getContext('2d');
         let juliaCam = { x: 0, y: 0, zoom: 1, isDragging: false, lastMouseX: 0, lastMouseY: 0 };
 
         function resetJuliaCamera() {
-            // Reestablecer cámara matemática
+            // Reestablecer únicamente la cámara física (posición y zoom)
             juliaCam.x = 0; 
             juliaCam.y = 0; 
             juliaCam.zoom = 1;
             
-            // Reestablecer físicamente el deslizador de la constante C al 50% de su recorrido (valor 0)
-            document.getElementById('param-julia').value = 0;
-
+            // NO se toca el valor del slider de la constante C para mantener la configuración del usuario
             ctxFrac.clearRect(0, 0, canvases.fractales.width, canvases.fractales.height);
             renderJulia(); 
         }
