@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Math & Physics Sandbox - Perfect Equilibrium</title>
+    <style>
+        :root {
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --accent: #38bdf8;
+            --accent-hover: #7dd3fc;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            background-color: var(--bg-primary);
+            color: var(--text-main);
+            overflow: hidden;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            background-color: var(--bg-secondary);
+            padding: 0.75rem 1.5rem;
+            border-bottom: 1px solid #334155;
+            flex-shrink: 0;
+        }
+
+        h1 {
+            font-size: 1.3rem;
+            font-weight: 600;
+            letter-spacing: -0.5px;
+            background: linear-gradient(to right, #38bdf8, #818cf8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .tabs-container {
+            display: flex;
+            background-color: #111827;
+            padding: 0.5rem 1rem 0 1rem;
+            border-bottom: 1px solid #334155;
+            gap: 0.25rem;
+            flex-shrink: 0;
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            padding: 0.6rem 1.2rem;
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            border-radius: 6px 6px 0 0;
+            transition: all 0.2s ease;
+        }
+
+        .tab-btn:hover {
+            color: var(--text-main);
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+
+        .tab-btn.active {
+            color: var(--accent);
+            background-color: var(--bg-secondary);
+            border: 1px solid #334155;
+            border-bottom: 1px solid var(--bg-secondary);
+            position: relative;
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            position: relative;
+            min-height: 0;
+        }
+
+        .view-panel {
+            display: none;
+            width: 100%;
+            height: 100%;
+        }
+
+        .view-panel.active {
+            display: flex;
+        }
+
+        .canvas-container {
+            flex: 1;
+            position: relative;
+            background-color: #05070c;
+            overflow: hidden;
+        }
+
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .controls-sidebar {
+            width: 300px;
+            border-left: 1px solid #334155;
+            padding: 1.25rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+            overflow-y: auto;
+            background-color: #1e293b;
+            flex-shrink: 0;
+        }
+
+        .controls-sidebar h3 {
+            font-size: 1.05rem;
+            color: var(--text-main);
+            border-bottom: 1px solid #475569;
+            padding-bottom: 0.4rem;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+
+        .control-group label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .control-group input[type="range"] {
+            width: 100%;
+            accent-color: var(--accent);
+            cursor: pointer;
+        }
+
+        .btn {
+            background-color: var(--accent);
+            color: #0f172a;
+            border: none;
+            padding: 0.5rem 1rem;
+            font-weight: 600;
+            font-size: 0.85rem;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn:hover {
+            background-color: var(--accent-hover);
+        }
+
+        .info-box {
+            font-size: 0.8rem;
+            line-height: 1.4;
+            color: var(--text-muted);
+            background-color: #0f172a;
+            padding: 0.85rem;
+            border-radius: 6px;
+            border-left: 3px solid var(--accent);
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Math & Physics Sandbox</h1>
+    </header>
+
+    <div class="tabs-container">
+        <button class="tab-btn active" onclick="switchTab('pendulo')">Péndulo Doble</button>
+        <button class="tab-btn" onclick="switchTab('colisiones')">Caja de Gravedad</button>
+        <button class="tab-btn" onclick="switchTab('fractales')">Fractales (Julia)</button>
+        <button class="tab-btn" onclick="switchTab('trigo')">Análisis de Fourier</button>
+        <button class="tab-btn" onclick="switchTab('vida')">Juego de la Vida</button>
+    </div>
+
+    <div class="main-content">
+
+        <!-- 1. PÉNDULO DOBLE -->
+        <div id="panel-pendulo" class="view-panel active">
+            <div class="canvas-container">
+                <canvas id="canvas-pendulo"></canvas>
+            </div>
+            <div class="controls-sidebar">
+                <h3>Péndulo Doble</h3>
+                <p class="info-box">Simulación de un sistema dinámico acoplado no lineal que exhibe comportamiento caótico determinista. Pequeñas variaciones generan trayectorias divergentes representadas cromáticamente por su energía cinética.</p>
+                <div class="control-group">
+                    <button class="btn" onclick="initPendulo()">Reiniciar Péndulo</button>
+                </div>
+                <div class="control-group">
+                    <label>Gravedad <span id="val-g-pen">0.6</span></label>
+                    <input type="range" id="param-g-pen" min="0" max="15" step="1" value="6" oninput="updatePenduloParams()">
+                </div>
+                <div class="control-group">
+                    <label>Amortiguamiento / Fricción <span id="val-f-pen">0.0 %</span></label>
+                    <input type="range" id="param-f-pen" min="0" max="100" step="1" value="0" oninput="updatePenduloParams()">
+                </div>
+                <div class="control-group">
+                    <label>Longitud Cuerda 1 <span id="val-l1">120</span></label>
+                    <input type="range" id="param-l1" min="40" max="150" value="120" oninput="updatePenduloParams()">
+                </div>
+                <div class="control-group">
+                    <label>Longitud Cuerda 2 <span id="val-l2">120</span></label>
+                    <input type="range" id="param-l2" min="40" max="150" value="120" oninput="updatePenduloParams()">
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. CAJA DE GRAVEDAD -->
+        <div id="panel-colisiones" class="view-panel">
+            <div class="canvas-container">
+                <canvas id="canvas-colisiones"></canvas>
+            </div>
+            <div class="controls-sidebar">
+                <h3>Caja de Gravedad</h3>
+                <p class="info-box">Simulación cinemática macroscópica de partículas moleculares en un entorno cerrado. Ilustra la conservación del momento lineal y el intercambio energético elástico macro-celular tras colisiones directas.</p>
+                <div class="control-group">
+                    <label>Gravedad <span id="val-g">0</span></label>
+                    <input type="range" id="param-g" min="0" max="20" step="1" value="0" oninput="updateColisionesParams()">
+                </div>
+                <div class="control-group">
+                    <label>Viscosidad del Medio <span id="val-visc">0 %</span></label>
+                    <input type="range" id="param-visc" min="0" max="100" step="1" value="0" oninput="updateColisionesParams()">
+                </div>
+                <button class="btn" onclick="resetParticles()">Esparcir Partículas</button>
+            </div>
+        </div>
+
+        <!-- 3. FRACTALES -->
+        <div id="panel-fractales" class="view-panel">
+            <div class="canvas-container">
+                <canvas id="canvas-fractales"></canvas>
+            </div>
+            <div class="controls-sidebar">
+                <h3>Fractales (Julia)</h3>
+                <p class="info-box">Representación en el plano complejo de la frontera geométrica de funciones polinómicas iterativas. Arrastra el lienzo para explorar las coordenadas o usa el scroll para profundizar infinito en sus patrones autorreferenciales.</p>
+                <div class="control-group">
+                    <label>Modificador Constante C</label>
+                    <input type="range" id="param-julia" min="-100" max="100" value="0" oninput="renderJulia()">
+                </div>
+                <button class="btn" onclick="resetJuliaCamera()">Resetear Cámara</button>
+            </div>
+        </div>
+
+        <!-- 4. TRIGONOMETRÍA / FOURIER -->
+        <div id="panel-trigo" class="view-panel">
+            <div class="canvas-container">
+                <canvas id="canvas-trigo"></canvas>
+            </div>
+            <div class="controls-sidebar">
+                <h3>Análisis de Fourier</h3>
+                <p class="info-box">Demostración geométrica de las series armónicas de Fourier. Superpone múltiples funciones trigonométricas circulares puras (epiciclos) sobre un vector rotatorio fundamental para generar y modelar una señal de onda compleja.</p>
+                <div class="control-group">
+                    <label>Número de Armónicos <span id="val-harmonics">3</span></label>
+                    <input type="range" id="param-harmonics" min="1" max="7" value="3" oninput="updateTrigoParams()">
+                </div>
+                <div class="control-group">
+                    <label>Velocidad de Rotación <span id="val-w">2</span></label>
+                    <input type="range" id="param-w" min="1" max="10" value="2" oninput="updateTrigoParams()">
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. JUEGO DE LA VIDA -->
+        <div id="panel-vida" class="view-panel">
+            <div class="canvas-container">
+                <canvas id="canvas-vida"></canvas>
+            </div>
+            <div class="controls-sidebar">
+                <h3>Juego de la Vida</h3>
+                <p class="info-box">Autómata celular gobernado por leyes de densidad de vecindad biológica. Si el ecosistema colapsa o se estabiliza de forma inerte, puedes hacer clic y arrastrar el ratón sobre el lienzo para sembrar nuevas agrupaciones de células vivas.</p>
+                <div class="control-group" style="flex-direction: row; gap: 0.5rem;">
+                    <button class="btn" id="btn-play-vida" onclick="toggleVida()" style="flex: 1;">Pausar</button>
+                    <button class="btn" onclick="clearVida()" style="background-color: #475569; color: white; flex: 1;">Limpiar</button>
+                </div>
+                <div class="control-group">
+                    <label>Velocidad de Evolución</label>
+                    <input type="range" id="param-speed-vida" min="1" max="25" value="12">
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        let currentTab = 'pendulo';
+        let animationFrameIds = {};
+        const canvases = {
+            pendulo: document.getElementById('canvas-pendulo'),
+            colisiones: document.getElementById('canvas-colisiones'),
+            fractales: document.getElementById('canvas-fractales'),
+            trigo: document.getElementById('canvas-trigo'),
+            vida: document.getElementById('canvas-vida')
+        };
+
+        const resizeObserver = new ResizeObserver(entries => {
+            for (let entry of entries) {
+                const canvas = entry.target.querySelector('canvas');
+                if (canvas) {
+                    canvas.width = entry.contentRect.width;
+                    canvas.height = entry.contentRect.height;
+                    
+                    if (currentTab === 'pendulo' && pData) initPendulo();
+                    if (currentTab === 'fractales') renderJulia();
+                    if (currentTab === 'trigo') initTrigo();
+                    if (currentTab === 'vida') syncVidaDimensions();
+                }
+            }
+        });
+
+        document.querySelectorAll('.canvas-container').forEach(container => {
+            resizeObserver.observe(container);
+        });
+
+        function switchTab(tabId) {
+            cancelAnimationFrame(animationFrameIds[currentTab]);
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            if(event && event.target.classList) event.target.classList.add('active');
+
+            document.querySelectorAll('.view-panel').forEach(panel => panel.classList.remove('active'));
+            document.getElementById(`panel-${tabId}`).classList.add('active');
+
+            currentTab = tabId;
+            
+            const activeContainer = document.querySelector(`#panel-${tabId} .canvas-container`);
+            canvases[tabId].width = activeContainer.clientWidth;
+            canvases[tabId].height = activeContainer.clientHeight;
+
+            if(tabId === 'pendulo') initPendulo();
+            if(tabId === 'colisiones') resetParticles();
+            if(tabId === 'fractales') renderJulia();
+            if(tabId === 'trigo') initTrigo();
+            if(tabId === 'vida') initVida();
+        }
+
+        // --- 1. PÉNDULO DOBLE ---
+        const ctxPen = canvases.pendulo.getContext('2d');
+        let pData = null;
+
+        function initPendulo() {
+            const w = canvases.pendulo.width;
+            const h = canvases.pendulo.height;
+            pData = {
+                r1: parseInt(document.getElementById('param-l1').value),
+                r2: parseInt(document.getElementById('param-l2').value),
+                m1: 20, m2: 20,
+                a1: Math.PI / 2, a2: Math.PI / 2,
+                a1_v: 0.0, a2_v: 0.0,
+                g: parseInt(document.getElementById('param-g-pen').value) / 10,
+                damping: 1 - (parseInt(document.getElementById('param-f-pen').value) / 2000), 
+                cx: w / 2, cy: 70,
+                trailCanvas: document.createElement('canvas')
+            };
+            pData.trailCanvas.width = w;
+            pData.trailCanvas.height = h;
+            pData.tCtx = pData.trailCanvas.getContext('2d');
+            pData.tCtx.fillStyle = '#05070c';
+            pData.tCtx.fillRect(0, 0, w, h);
+            pData.lastX2 = null; pData.lastY2 = null;
+
+            loopPendulo();
+        }
+
+        function updatePenduloParams() {
+            if(!pData) return;
+            pData.r1 = parseInt(document.getElementById('param-l1').value);
+            pData.r2 = parseInt(document.getElementById('param-l2').value);
+            pData.g = parseInt(document.getElementById('param-g-pen').value) / 10;
+            let fVal = parseInt(document.getElementById('param-f-pen').value);
+            pData.damping = 1 - (fVal / 2000); 
+            document.getElementById('val-l1').innerText = pData.r1;
+            document.getElementById('val-l2').innerText = pData.r2;
+            document.getElementById('val-g-pen').innerText = pData.g.toFixed(1);
+            document.getElementById('val-f-pen').innerText = `${fVal}.0 %`;
+        }
+
+        function loopPendulo() {
+            if (currentTab !== 'pendulo') return;
+
+            let num1 = -pData.g * (2 * pData.m1 + pData.m2) * Math.sin(pData.a1);
+            let num2 = -pData.m2 * pData.g * Math.sin(pData.a1 - 2 * pData.a2);
+            let num3 = -2 * Math.sin(pData.a1 - pData.a2) * pData.m2;
+            let num4 = pData.a2_v * pData.a2_v * pData.r2 + pData.a1_v * pData.a1_v * pData.r1 * Math.cos(pData.a1 - pData.a2);
+            let den = pData.r1 * (2 * pData.m1 + pData.m2 - pData.m2 * Math.cos(2 * pData.a1 - 2 * pData.a2));
+            let a1_a = den === 0 ? 0 : (num1 + num2 + num3 * num4) / den;
+
+            num1 = 2 * Math.sin(pData.a1 - pData.a2);
+            num2 = (pData.a1_v * pData.a1_v * pData.r1 * (pData.m1 + pData.m2)) + pData.g * (pData.m1 + pData.m2) * Math.cos(pData.a1) + pData.a2_v * pData.a2_v * pData.r2 * pData.m2 * Math.cos(pData.a1 - pData.a2);
+            den = pData.r2 * (2 * pData.m1 + pData.m2 - pData.m2 * Math.cos(2 * pData.a1 - 2 * pData.a2));
+            let a2_a = den === 0 ? 0 : (num1 * num2) / den;
+
+            pData.a1_v += a1_a; pData.a2_v += a2_a;
+            pData.a1_v *= pData.damping;
+            pData.a2_v *= pData.damping;
+            pData.a1 += pData.a1_v; pData.a2 += pData.a2_v;
+
+            let x1 = pData.cx + pData.r1 * Math.sin(pData.a1);
+            let y1 = pData.cy + pData.r1 * Math.cos(pData.a1);
+            let x2 = x1 + pData.r2 * Math.sin(pData.a2);
+            let y2 = y1 + pData.r2 * Math.cos(pData.a2);
+
+            let vel = Math.sqrt(pData.a2_v * pData.a2_v * pData.r2 * pData.r2 + pData.a1_v * pData.a1_v * pData.r1 * pData.r1);
+            let normVel = Math.min(vel / 25, 1); 
+            let hue = 190 + (normVel * 130);
+
+            pData.tCtx.fillStyle = 'rgba(5, 7, 12, 0.04)';
+            pData.tCtx.fillRect(0, 0, canvases.pendulo.width, canvases.pendulo.height);
+
+            if (pData.lastX2 !== null) {
+                pData.tCtx.strokeStyle = `hsl(${hue}, 100%, 60%)`;
+                pData.tCtx.lineWidth = 3;
+                pData.tCtx.beginPath();
+                pData.tCtx.moveTo(pData.lastX2, pData.lastY2);
+                pData.tCtx.lineTo(x2, y2);
+                pData.tCtx.stroke();
+            }
+            pData.lastX2 = x2; pData.lastY2 = y2;
+
+            ctxPen.drawImage(pData.trailCanvas, 0, 0);
+
+            ctxPen.strokeStyle = '#475569';
+            ctxPen.lineWidth = 4;
+            ctxPen.beginPath();
+            ctxPen.moveTo(pData.cx, pData.cy);
+            ctxPen.lineTo(x1, y1);
+            ctxPen.lineTo(x2, y2);
+            ctxPen.stroke();
+
+            ctxPen.fillStyle = '#f8fafc';
+            ctxPen.beginPath();
+            ctxPen.arc(x1, y1, 7, 0, 2*Math.PI);
+            ctxPen.arc(x2, y2, 7, 0, 2*Math.PI);
+            ctxPen.fill();
+
+            animationFrameIds['pendulo'] = requestAnimationFrame(loopPendulo);
+        }
+
+        // --- 2. CAJA DE GRAVEDAD ---
+        const ctxCol = canvases.colisiones.getContext('2d');
+        let particles = [];
+        let colParams = { g: 0, friction: 1 };
+
+        function resetParticles() {
+            particles = [];
+            const w = canvases.colisiones.width || 600;
+            const h = canvases.colisiones.height || 500;
+            
+            for(let i=0; i<30; i++) {
+                let radius = Math.random() * 8 + 8;
+                particles.push({
+                    x: Math.random() * (w - radius * 4) + radius * 2,
+                    y: Math.random() * (h - radius * 4) + radius * 2,
+                    vx: (Math.random() - 0.5) * 5,
+                    vy: (Math.random() - 0.5) * 5,
+                    r: radius,
+                    mass: radius * radius,
+                    color: `hsl(${Math.random() * 40 + 190}, 90%, 65%)`
+                });
+            }
+            updateColisionesParams();
+            loopColisiones();
+        }
+
+        function updateColisionesParams() {
+            colParams.g = parseInt(document.getElementById('param-g').value) / 45;
+            let viscInput = parseInt(document.getElementById('param-visc').value);
+            colParams.friction = 1 - (viscInput / 2500); 
+            
+            document.getElementById('val-g').innerText = parseInt(document.getElementById('param-g').value);
+            document.getElementById('val-visc').innerText = `${viscInput} %`;
+        }
+
+        function resolveCollision(p1, p2) {
+            const dx = p2.x - p1.x;
+            const dy = p2.y - p1.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist === 0) return;
+
+            const nx = dx / dist;
+            const ny = dy / dist;
+
+            const kx = p1.vx - p2.vx;
+            const ky = p1.vy - p2.vy;
+            const p = 2 * (nx * kx + ny * ky) / (p1.mass + p2.mass);
+
+            if ((nx * kx + ny * ky) > 0) { 
+                p1.vx -= p * p2.mass * nx;
+                p1.vy -= p * p2.mass * ny;
+                p2.vx += p * p1.mass * nx;
+                p2.vy += p * p1.mass * ny;
+            }
+        }
+
+        function loopColisiones() {
+            if (currentTab !== 'colisiones') return;
+            const w = canvases.colisiones.width;
+            const h = canvases.colisiones.height;
+
+            ctxCol.fillStyle = '#05070c';
+            ctxCol.fillRect(0,0,w,h);
+
+            particles.forEach(p => {
+                p.vy += colParams.g;
+                p.vx *= colParams.friction;
+                p.vy *= colParams.friction;
+                p.x += p.vx; p.y += p.vy;
+
+                if(p.x - p.r < 0) { p.x = p.r; p.vx = Math.abs(p.vx); }
+                if(p.x + p.r > w) { p.x = w - p.r; p.vx = -Math.abs(p.vx); }
+                if(p.y - p.r < 0) { p.y = p.r; p.vy = Math.abs(p.vy); }
+                if(p.y + p.r > h) { p.y = h - p.r; p.vy = -Math.abs(p.vy) * 0.85; if(Math.abs(p.vy) < 0.08) p.vy = 0; }
+            });
+
+            for (let i = 0; i < particles.length; i++) {
+                for (let j = i + 1; j < particles.length; j++) {
+                    let pi = particles[i]; let pj = particles[j];
+                    let dx = pj.x - pi.x;
+                    let dy = pj.y - pi.y;
+                    let dist = Math.sqrt(dx*dx + dy*dy);
+                    let minDist = pi.r + pj.r;
+
+                    if (dist < minDist) {
+                        let overlap = minDist - dist;
+                        let nx = dx / (dist || 1); 
+                        let ny = dy / (dist || 1);
+                        pi.x -= nx * overlap * 0.5; pi.y -= ny * overlap * 0.5;
+                        pj.x += nx * overlap * 0.5; pj.y += ny * overlap * 0.5;
+
+                        resolveCollision(pi, pj);
+                    }
+                }
+            }
+
+            particles.forEach(p => {
+                ctxCol.fillStyle = p.color;
+                ctxCol.beginPath();
+                ctxCol.arc(p.x, p.y, p.r, 0, 2*Math.PI);
+                ctxCol.fill();
+            });
+
+            animationFrameIds['colisiones'] = requestAnimationFrame(loopColisiones);
+        }
+
+        // --- 3. FRACTAL DE JULIA CON RESET DE DESLIZADOR COMPLETADO ---
+        const ctxFrac = canvases.fractales.getContext('2d');
+        let juliaCam = { x: 0, y: 0, zoom: 1, isDragging: false, lastMouseX: 0, lastMouseY: 0 };
+
+        function resetJuliaCamera() {
+            // Reestablecer cámara matemática
+            juliaCam.x = 0; 
+            juliaCam.y = 0; 
+            juliaCam.zoom = 1;
+            
+            // Reestablecer físicamente el deslizador de la constante C al 50% de su recorrido (valor 0)
+            document.getElementById('param-julia').value = 0;
+
+            ctxFrac.clearRect(0, 0, canvases.fractales.width, canvases.fractales.height);
+            renderJulia(); 
+        }
+
+        canvases.fractales.addEventListener('mousedown', (e) => {
+            juliaCam.isDragging = true;
+            juliaCam.lastMouseX = e.clientX;
+            juliaCam.lastMouseY = e.clientY;
+        });
+
+        canvases.fractales.addEventListener('mousemove', (e) => {
+            if (!juliaCam.isDragging) return;
+            let dx = e.clientX - juliaCam.lastMouseX;
+            let dy = e.clientY - juliaCam.lastMouseY;
+            
+            let w = canvases.fractales.width;
+            let h = canvases.fractales.height;
+            let factor = Math.min(w, h) * 0.4 * juliaCam.zoom;
+
+            juliaCam.x -= (dx * 1.5) / factor;
+            juliaCam.y -= (dy * 1.5) / factor;
+
+            juliaCam.lastMouseX = e.clientX;
+            juliaCam.lastMouseY = e.clientY;
+            renderJulia();
+        });
+
+        window.addEventListener('mouseup', () => juliaCam.isDragging = false);
+
+        canvases.fractales.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            const rect = canvases.fractales.getBoundingClientRect();
+            let mouseX = e.clientX - rect.left;
+            let mouseY = e.clientY - rect.top;
+
+            let w = canvases.fractales.width;
+            let h = canvases.fractales.height;
+            let scaleFactor = Math.min(w, h) * 0.4;
+
+            let cxBefore = 1.5 * (mouseX - w / 2) / (scaleFactor * juliaCam.zoom) + juliaCam.x;
+            let cyBefore = 1.5 * (mouseY - h / 2) / (scaleFactor * juliaCam.zoom) + juliaCam.y;
+
+            if (e.deltaY < 0) juliaCam.zoom *= 1.25;
+            else juliaCam.zoom /= 1.25;
+            if(juliaCam.zoom < 0.2) juliaCam.zoom = 0.2;
+
+            juliaCam.x = cxBefore - 1.5 * (mouseX - w / 2) / (scaleFactor * juliaCam.zoom);
+            juliaCam.y = cyBefore - 1.5 * (mouseY - h / 2) / (scaleFactor * juliaCam.zoom);
+
+            renderJulia();
+        }, { passive: false });
+
+        function renderJulia() {
+            if (currentTab !== 'fractales') return;
+            let slideVal = parseInt(document.getElementById('param-julia').value) / 100;
+            let cx = -0.7 + (slideVal * 0.08); 
+            let cy = 0.27015; 
+            
+            let w = canvases.fractales.width; 
+            let h = canvases.fractales.height;
+            if(w === 0 || h === 0) return;
+            
+            let imgData = ctxFrac.createImageData(w, h);
+            let maxIter = 40;
+            let baseScale = Math.min(w, h) * 0.4 * juliaCam.zoom;
+
+            for (let x = 0; x < w; x++) {
+                for (let y = 0; y < h; y++) {
+                    let zx = 1.5 * (x - w / 2) / baseScale + juliaCam.x;
+                    let zy = 1.5 * (y - h / 2) / baseScale + juliaCam.y;
+                    let i = maxIter;
+                    
+                    while (zx * zx + zy * zy < 4 && i > 0) {
+                        let tmp = zx * zx - zy * zy + cx;
+                        zy = 2.0 * zx * zy + cy;
+                        zx = tmp;
+                        i--;
+                    }
+
+                    let pix = (x + y * w) * 4;
+                    if (i === 0) {
+                        imgData.data[pix] = 5; imgData.data[pix + 1] = 8; imgData.data[pix + 2] = 18;
+                    } else {
+                        imgData.data[pix] = (i * 7) % 255;
+                        imgData.data[pix + 1] = (i * 3) % 110 + 40;
+                        imgData.data[pix + 2] = (i * 18) % 220 + 35;
+                    }
+                    imgData.data[pix + 3] = 255;
+                }
+            }
+            ctxFrac.putImageData(imgData, 0, 0);
+        }
+
+        // --- 4. SINTETIZADOR DE FOURIER ---
+        const ctxTri = canvases.trigo.getContext('2d');
+        let fourierState = { t: 0, speed: 0.004, harmonics: 3, history: [] };
+
+        function initTrigo() {
+            fourierState.history = [];
+            updateTrigoParams();
+            loopTrigo();
+        }
+
+        function updateTrigoParams() {
+            fourierState.speed = parseInt(document.getElementById('param-w').value) / 500;
+            fourierState.harmonics = parseInt(document.getElementById('param-harmonics').value);
+            document.getElementById('val-w').innerText = (fourierState.speed * 500).toFixed(0);
+            document.getElementById('val-harmonics').innerText = fourierState.harmonics;
+        }
+
+        function loopTrigo() {
+            if (currentTab !== 'trigo') return;
+            const w = canvases.trigo.width;
+            const h = canvases.trigo.height;
+
+            ctxTri.fillStyle = '#05070c';
+            ctxTri.fillRect(0,0,w,h);
+
+            let originX = w * 0.25; 
+            let originY = h / 2;
+            let baseRadius = Math.min(w, h) * 0.16;
+
+            fourierState.t += fourierState.speed;
+
+            let x = originX;
+            let y = originY;
+
+            for (let i = 0; i < fourierState.harmonics; i++) {
+                let prevX = x;
+                let prevY = y;
+                
+                let n = i * 2 + 1; 
+                let radius = baseRadius * (4 / (n * Math.PI));
+
+                x += radius * Math.cos(n * fourierState.t);
+                y += radius * Math.sin(n * fourierState.t);
+
+                ctxTri.strokeStyle = i === 0 ? '#334155' : 'rgba(56, 189, 248, 0.15)';
+                ctxTri.lineWidth = 1;
+                ctxTri.beginPath();
+                ctxTri.arc(prevX, prevY, radius, 0, 2 * Math.PI);
+                ctxTri.stroke();
+
+                ctxTri.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+                ctxTri.beginPath();
+                ctxTri.moveTo(prevX, prevY);
+                ctxTri.lineTo(x, y);
+                ctxTri.stroke();
+            }
+
+            fourierState.history.unshift(y);
+            let graphStartX = originX + baseRadius + 110;
+            if (fourierState.history.length > (w - graphStartX)) fourierState.history.pop();
+
+            ctxTri.strokeStyle = '#64748b';
+            ctxTri.setLineDash([3, 4]);
+            ctxTri.beginPath();
+            ctxTri.moveTo(x, y);
+            ctxTri.lineTo(graphStartX, y);
+            ctxTri.stroke();
+            ctxTri.setLineDash([]);
+
+            ctxTri.strokeStyle = '#38bdf8';
+            ctxTri.lineWidth = 3;
+            ctxTri.beginPath();
+            for (let i = 0; i < fourierState.history.length; i++) {
+                ctxTri.lineTo(graphStartX + i, fourierState.history[i]);
+            }
+            ctxTri.stroke();
+
+            animationFrameIds['trigo'] = requestAnimationFrame(loopTrigo);
+        }
+
+        // --- 5. JUEGO DE LA VIDA ---
+        const ctxVid = canvases.vida.getContext('2d');
+        let res = 15; let cols = 0, rows = 0;
+        let grid = [];
+        let isRunningVida = true; let isDrawingVida = false;
+
+        function initVida() {
+            syncVidaDimensions();
+            grid = Array.from({length: cols}, () => Array.from({length: rows}, () => Math.random() > 0.85 ? 1 : 0));
+            loopVida();
+        }
+
+        function syncVidaDimensions() {
+            const w = canvases.vida.width; const h = canvases.vida.height;
+            if(w === 0 || h === 0) return;
+            const targetCols = Math.floor(w / res); const targetRows = Math.floor(h / res);
+            if (targetCols !== cols || targetRows !== rows) {
+                cols = targetCols; rows = targetRows;
+                grid = Array.from({length: cols}, () => Array.from({length: rows}, () => 0));
+            }
+        }
+
+        function toggleVida() {
+            isRunningVida = !isRunningVida;
+            document.getElementById('btn-play-vida').innerText = isRunningVida ? 'Pausar' : 'Reanudar';
+        }
+
+        function clearVida() {
+            grid = Array.from({length: cols}, () => Array.from({length: rows}, () => 0));
+        }
+
+        function injectLife(e) {
+            const rect = canvases.vida.getBoundingClientRect();
+            let mx = Math.floor((e.clientX - rect.left) / res);
+            let my = Math.floor((e.clientY - rect.top) / res);
+            if (mx >= 0 && mx < cols && my >= 0 && my < rows) {
+                grid[mx][my] = 1;
+            }
+        }
+
+        canvases.vida.addEventListener('mousedown', (e) => { 
+            isDrawingVida = true; 
+            injectLife(e); 
+        });
+        
+        canvases.vida.addEventListener('mousemove', (e) => {
+            if(isDrawingVida) injectLife(e);
+        });
+        
+        window.addEventListener('mouseup', () => isDrawingVida = false);
+
+        let lastUpdateTime = 0;
+        function loopVida(timestamp) {
+            if (currentTab !== 'vida') return;
+            let speedInput = parseInt(document.getElementById('param-speed-vida').value);
+            let targetInterval = 1000 / speedInput; 
+            
+            ctxVid.fillStyle = '#05070c';
+            ctxVid.fillRect(0,0,canvases.vida.width,canvases.vida.height);
+
+            for(let x=0; x<cols; x++) {
+                for(let y=0; y<rows; y++) {
+                    if(grid[x] && grid[x][y] === 1) {
+                        ctxVid.fillStyle = '#38bdf8';
+                        ctxVid.fillRect(x*res, y*res, res-1, res-1);
+                    }
+                }
+            }
+
+            if(isRunningVida && timestamp - lastUpdateTime > targetInterval) {
+                let nextGrid = Array.from({length: cols}, () => Array.from({length: rows}, () => 0));
+                for(let x=0; x<cols; x++) {
+                    for(let y=0; y<rows; y++) {
+                        let neighbors = 0;
+                        for(let i=-1; i<2; i++) {
+                            for(let j=-1; j<2; j++) {
+                                if(i===0 && j===0) continue;
+                                let nx = (x + i + cols) % cols;
+                                let ny = (y + j + rows) % rows;
+                                if (grid[nx]) neighbors += grid[nx][ny] || 0;
+                            }
+                        }
+                        let currentStatus = (grid[x]) ? grid[x][y] : 0;
+                        if(currentStatus === 1 && (neighbors === 2 || neighbors === 3)) nextGrid[x][y] = 1;
+                        else if(currentStatus === 0 && neighbors === 3) nextGrid[x][y] = 1;
+                    }
+                }
+                grid = nextGrid;
+                lastUpdateTime = timestamp;
+            }
+            animationFrameIds['vida'] = requestAnimationFrame(loopVida);
+        }
+
+        window.onload = () => { 
+            const container = document.querySelector('.canvas-container');
+            canvases.pendulo.width = container.clientWidth;
+            canvases.pendulo.height = container.clientHeight;
+            initPendulo(); 
+        };
+    </script>
+</body>
+</html>
