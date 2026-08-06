@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PhystioMath - Perfect Equilibrium</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <header>
+        <h1>PhystioMath</h1>
+    </header>
+
+    <div class="tabs-container">
+        <button class="tab-btn active" onclick="switchTab('pendulo')">Péndulo Doble</button>
+        <button class="tab-btn" onclick="switchTab('colisiones')">Caja de Gravedad</button>
+        <button class="tab-btn" onclick="switchTab('fractales')">Fractales (Julia)</button>
+        <button class="tab-btn" onclick="switchTab('trigo')">Análisis de Fourier</button>
+        <button class="tab-btn" onclick="switchTab('vida')">Juego de la Vida</button>
+    </div>
+
+    <div class="main-content">
+
+        <!-- 1. PÉNDULO DOBLE -->
+        <div id="panel-pendulo" class="view-panel active">
+            <div class="canvas-container">
+                <canvas id="canvas-pendulo"></canvas>
+            </div>
+            <div class="controls-sidebar">
+                <h3>Péndulo Doble</h3>
+                <p class="info-box">Simulación de un sistema dinámico acoplado no lineal que exhibe comportamiento caótico determinista. Pequeñas variaciones generan trayectorias divergentes representadas cromáticamente por su energía cinética.</p>
+                <div class="control-group">
+                    <button class="btn" onclick="initPendulo()">Reiniciar Péndulo</button>
+                </div>
+                <div class="control-group">
+                    <label>Gravedad <span id="val-g-pen">0.6</span></label>
+                    <input type="range" id="param-g-pen" min="0" max="15" step="1" value="6" oninput="updatePenduloParams()">
+                </div>
+                <div class="control-group">
+                    <label>Fricción <span id="val-f-pen">0.0 %</span></label>
+                    <input type="range" id="param-f-pen" min="0" max="100" step="1" value="0" oninput="updatePenduloParams()">
+                </div>
+                <div class="control-group">
+                    <label>Longitud Cuerda 1 <span id="val-l1">120</span></label>
+                    <input type="range" id="param-l1" min="40" max="220" value="120" oninput="updatePenduloParams()">
+                </div>
+                <div class="control-group">
+                    <label>Longitud Cuerda 2 <span id="val-l2">120</span></label>
+                    <input type="range" id="param-l2" min="40" max="220" value="120" oninput="updatePenduloParams()">
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. CAJA DE GRAVEDAD -->
+        <div id="panel-colisiones" class="view-panel">
+            <div class="canvas-container">
+                <canvas id="canvas-colisiones"></canvas>
+            </div>
+            <div class="controls-sidebar">
+                <h3>Caja de Gravedad</h3>
+                <p class="info-box">Simulación cinemática macroscópica de partículas moleculares en un entorno cerrado. Ilustra la conservación del momento lineal y el intercambio energético elástico macro-celular tras colisiones directas.</p>
+                <div class="control-group">
+                    <label>Gravedad <span id="val-g">0</span></label>
+                    <input type="range" id="param-g" min="0" max="20" step="1" value="0" oninput="updateColisionesParams()">
+                </div>
+                <div class="control-group">
+                    <label>Fricción <span id="val-visc">0 %</span></label>
+                    <input type="range" id="param-visc" min="0" max="100" step="1" value="0" oninput="updateColisionesParams()">
+                </div>
+                <button class="btn" onclick="resetParticles()">Esparcir Partículas</button>
+            </div>
+        </div>
+
+        <!-- 3. FRACTALES -->
+        <div id="panel-fractales" class="view-panel">
+            <div class="canvas-container">
+                <canvas id="canvas-fractales"></canvas>
+            </div>
+            <div class="controls-sidebar">
+                <h3>Fractales (Julia)</h3>
+                <p class="info-box">Representación en el plano complejo de la frontera geométrica de funciones polinómicas iterativas. Arrastra el lienzo para explorar las coordenadas o usa el scroll para profundizar infinito en sus patrones autorreferenciales.</p>
+                <div class="control-group">
+                    <label>Modificador Constante C</label>
+                    <input type="range" id="param-julia" min="-100" max="100" value="0" oninput="renderJulia()">
+                </div>
+                <button class="btn" onclick="resetJuliaCamera()">Resetear Cámara</button>
+            </div>
+        </div>
+
+        <!-- 4. TRIGONOMETRÍA / FOURIER -->
+        <div id="panel-trigo" class="view-panel">
+            <div class="canvas-container">
+                <canvas id="canvas-trigo"></canvas>
+            </div>
+            <div class="controls-sidebar">
+                <h3>Análisis de Fourier</h3>
+                <p class="info-box">Demostración geométrica de las series armónicas de Fourier. Superpone múltiples funciones trigonométricas circulares puras (epiciclos) sobre un vector rotatorio fundamental para generar y modelar una señal de onda compleja.</p>
+                <div class="control-group">
+                    <label>Número de Armónicos <span id="val-harmonics">3</span></label>
+                    <input type="range" id="param-harmonics" min="1" max="7" value="3" oninput="updateTrigoParams()">
+                </div>
+                <div class="control-group">
+                    <label>Velocidad de Rotación <span id="val-w">2</span></label>
+                    <input type="range" id="param-w" min="1" max="10" value="2" oninput="updateTrigoParams()">
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. JUEGO DE LA VIDA -->
+        <div id="panel-vida" class="view-panel">
+            <div class="canvas-container">
+                <canvas id="canvas-vida"></canvas>
+            </div>
+            <div class="controls-sidebar">
+                <h3>Juego de la Vida</h3>
+                <p class="info-box">Autómata celular gobernado por leyes de densidad de vecindad biológica. Si el ecosistema colapsa o se estabiliza de forma inerte, puedes hacer clic y arrastrar el ratón sobre el lienzo para sembrar nuevas agrupaciones de células vivas.</p>
+                <div class="control-group" style="flex-direction: row; gap: 0.5rem;">
+                    <button class="btn" id="btn-play-vida" onclick="toggleVida()" style="flex: 1;">Pausar</button>
+                    <button class="btn" onclick="clearVida()" style="background-color: #475569; color: white; flex: 1;">Limpiar</button>
+                </div>
+                <div class="control-group">
+                    <label>Velocidad de Evolución</label>
+                    <input type="range" id="param-speed-vida" min="1" max="25" value="12">
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

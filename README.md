@@ -15,6 +15,6 @@ Un entorno interactivo experimental basado en la web para explorar sistemas din√
 No requiere dependencias ni servidores locales. Solo clona el repositorio y abre el archivo principal en cualquier navegador moderno:
 
 ```bash
-git clone [https://github.com/TU_USUARIO/TU_REPOSITORIO.git](https://github.com/TU_USUARIO/TU_REPOSITORIO.git)
-cd TU_REPOSITORIO
-# Abre index.html en tu navegador preferido
+git clone https://github.com/StefiBad/PhysioMath
+cd PhysioMath
+#Abre index.html en tu navegador (chrome, firefox...)
